@@ -20,6 +20,9 @@ public class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelTyp
     public typealias Element = [S]
     public var animationConfiguration = AnimationConfiguration()
 
+    public var updated: Observable<Void> { return updateSubject.asObservable() }
+    private let updateSubject: PublishSubject<Void> = PublishSubject<Void>()
+
     var dataSet = false
 
     public override init() {
@@ -47,6 +50,7 @@ public class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelTyp
 
                             tableView.performBatchUpdates(difference, animationConfiguration: self.animationConfiguration)
                         }
+                        self.updateSubject.onNext()
                     }
                     catch let e {
                         rxDebugFatalError(e)
