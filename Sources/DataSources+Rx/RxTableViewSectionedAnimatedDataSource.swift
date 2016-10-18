@@ -21,7 +21,7 @@ public class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelTyp
     public var animationConfiguration = AnimationConfiguration()
 
     public var updated: Observable<Void> { return updateSubject.asObservable() }
-    private let updateSubject: PublishSubject<Void> = PublishSubject<Void>()
+    private let updatedSubject: PublishSubject<Void> = PublishSubject<Void>()
 
     var dataSet = false
 
@@ -38,7 +38,7 @@ public class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelTyp
                 self.dataSet = true
                 dataSource.setSections(newSections)
                 tableView.reloadData()
-                print("[RxDataSources: case 1")
+                self.updatedSubject.onNext()
             }
             else {
                 dispatch_async(dispatch_get_main_queue()) {
@@ -52,13 +52,13 @@ public class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelTyp
                             tableView.performBatchUpdates(difference, animationConfiguration: self.animationConfiguration)
                         }
                         print("[RxDataSources: case 2")
-                        self.updateSubject.onNext()
+                        self.updatedSubject.onNext()
                     }
                     catch let e {
                         rxDebugFatalError(e)
                         self.setSections(newSections)
-                        print("[RxDataSources: case 3")
                         tableView.reloadData()
+                        self.updatedSubject.onNext()
                     }
                 }
             }
