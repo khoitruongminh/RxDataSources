@@ -38,6 +38,7 @@ public class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelTyp
                 self.dataSet = true
                 dataSource.setSections(newSections)
                 tableView.reloadData()
+                print("[RxDataSources: case 1")
             }
             else {
                 dispatch_async(dispatch_get_main_queue()) {
@@ -50,11 +51,13 @@ public class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelTyp
 
                             tableView.performBatchUpdates(difference, animationConfiguration: self.animationConfiguration)
                         }
+                        print("[RxDataSources: case 2")
                         self.updateSubject.onNext()
                     }
                     catch let e {
                         rxDebugFatalError(e)
                         self.setSections(newSections)
+                        print("[RxDataSources: case 3")
                         tableView.reloadData()
                     }
                 }
