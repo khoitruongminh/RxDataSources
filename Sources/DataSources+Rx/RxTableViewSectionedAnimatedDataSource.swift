@@ -20,7 +20,7 @@ public class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelTyp
     public typealias Element = [S]
     public var animationConfiguration = AnimationConfiguration()
 
-    public var updated: Observable<Void> { return updateSubject.asObservable() }
+    public var updated: Observable<Void> { return updatedSubject.asObservable() }
     private let updatedSubject: PublishSubject<Void> = PublishSubject<Void>()
 
     var dataSet = false
