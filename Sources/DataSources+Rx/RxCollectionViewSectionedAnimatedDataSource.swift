@@ -22,7 +22,9 @@ public class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionMod
     // For some inexplicable reason, when doing animated updates first time
     // it crashes. Still need to figure out that one.
     var dataSet = false
-
+    public var updated: Observable<Void> { return updatedSubject.asObservable() }
+    private let updatedSubject: PublishSubject<Void> = PublishSubject<Void>()
+    
     public override init() {
         super.init()
     }
@@ -36,6 +38,7 @@ public class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionMod
                 self.dataSet = true
                 dataSource.setSections(newSections)
                 collectionView.reloadData()
+                self.updatedSubject.onNext()
             }
             else {
                 dispatch_async(dispatch_get_main_queue()) {
@@ -48,6 +51,7 @@ public class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionMod
 
                             collectionView.performBatchUpdates(difference, animationConfiguration: self.animationConfiguration)
                         }
+                        self.updatedSubject.onNext()
                     }
                     catch let e {
                         #if DEBUG
@@ -56,6 +60,7 @@ public class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionMod
                         #endif
                         self.setSections(newSections)
                         collectionView.reloadData()
+                        self.updatedSubject.onNext()
                     }
                 }
             }

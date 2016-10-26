@@ -51,7 +51,6 @@ public class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelTyp
 
                             tableView.performBatchUpdates(difference, animationConfiguration: self.animationConfiguration)
                         }
-                        print("[RxDataSources: case 2")
                         self.updatedSubject.onNext()
                     }
                     catch let e {
