@@ -28,10 +28,10 @@ data
    .addDisposableTo(disposeBag)
 ```
                         DESC
-  s.homepage         = "https://github.com/ReactiveX/RxSwift"
+  s.homepage         = "https://github.com/khoitruongminh/RxDataSources"
   s.license          = 'MIT'
   s.author           = { "Krunoslav Zaher" => "krunoslav.zaher@gmail.com" }
-  s.source           = { :git => "https://github.com/RxSwiftCommunity/RxDataSources.git", :tag => s.version.to_s }
+  s.source           = { :git => "https://github.com/khoitruongminh/RxDataSources.git", :tag => s.version.to_s }
 
   s.requires_arc          = true
 
