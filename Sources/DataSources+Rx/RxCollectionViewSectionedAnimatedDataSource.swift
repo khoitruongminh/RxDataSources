@@ -26,6 +26,9 @@ open class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionModel
     // For some inexplicable reason, when doing animated updates first time
     // it crashes. Still need to figure out that one.
     var dataSet = false
+    
+    public var updated: Observable<Void> { return updatedSubject.asObservable() }
+    private let updatedSubject: PublishSubject<Void> = PublishSubject<Void>()
 
     private let disposeBag = DisposeBag()
 
@@ -63,6 +66,7 @@ open class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionModel
                     dataSource.setSections(difference.finalSections)
 
                     collectionView.performBatchUpdates(difference, animationConfiguration: self.animationConfiguration)
+                    self.updatedSubject.onNext()
                 }
             }
             catch let e {
@@ -72,6 +76,7 @@ open class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionModel
                 #endif
                 self.setSections(newSections)
                 collectionView.reloadData()
+                self.updatedSubject.onNext()
             }
         }.on(event)
     }
@@ -85,10 +90,12 @@ open class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionModel
                 self.dataSet = true
                 dataSource.setSections(newSections)
                 collectionView.reloadData()
+                self.updatedSubject.onNext()
             }
             else {
                 let element = (collectionView, observedEvent)
                 dataSource.partialUpdateEvent.on(.next(element))
+                self.updatedSubject.onNext()
             }
         }.on(observedEvent)
     }
