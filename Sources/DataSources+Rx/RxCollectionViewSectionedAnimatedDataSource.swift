@@ -55,6 +55,7 @@ public class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionMod
                     dataSource.setSections(difference.finalSections)
                     collectionView.performBatchUpdates(difference, animationConfiguration: self.animationConfiguration)
                 }
+                self.updatedSubject.onNext()
             }
             catch let e {
                 #if DEBUG
@@ -63,6 +64,7 @@ public class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionMod
                 #endif
                 self.setSections(newSections)
                 collectionView.reloadData()
+                self.updatedSubject.onNext()
             }
             }.on(event)
     }
