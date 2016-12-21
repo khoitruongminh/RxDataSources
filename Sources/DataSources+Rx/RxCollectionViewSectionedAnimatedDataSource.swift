@@ -24,9 +24,47 @@ public class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionMod
     var dataSet = false
     public var updated: Observable<Void> { return updatedSubject.asObservable() }
     private let updatedSubject: PublishSubject<Void> = PublishSubject<Void>()
+
+    private let disposeBag = DisposeBag()
+
+    // This subject and throttle are here
+    // because collection view has problems processing animated updates fast.
+    // This should somewhat help to alleviate the problem.
+    private let partialUpdateEvent = PublishSubject<(UICollectionView, Event<Element>)>()
     
     public override init() {
         super.init()
+        self.partialUpdateEvent
+            // so in case it does produce a crash, it will be after the data has changed
+            .observeOn(MainScheduler.asyncInstance)
+            // Collection view has issues digesting fast updates, this should
+            // help to alleviate the issues with them.
+            .throttle(0.5, scheduler: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] event in
+                self?.collectionView(event.0, throttledObservedEvent: event.1)
+                })
+            .addDisposableTo(disposeBag)
+    }
+
+    public func collectionView(collectionView: UICollectionView, throttledObservedEvent event: Event<Element>) {
+        UIBindingObserver(UIElement: self) { dataSource, newSections in
+            let oldSections = dataSource.sectionModels
+            do {
+                let differences = try differencesForSectionedView(oldSections, finalSections: newSections)
+                for difference in differences {
+                    dataSource.setSections(difference.finalSections)
+                    collectionView.performBatchUpdates(difference, animationConfiguration: self.animationConfiguration)
+                }
+            }
+            catch let e {
+                #if DEBUG
+                    print("Error while binding data animated: \(e)\nFallback to normal `reloadData` behavior.")
+                    rxDebugFatalError(e)
+                #endif
+                self.setSections(newSections)
+                collectionView.reloadData()
+            }
+            }.on(event)
     }
     
     public func collectionView(collectionView: UICollectionView, observedEvent: Event<Element>) {
@@ -41,28 +79,8 @@ public class RxCollectionViewSectionedAnimatedDataSource<S: AnimatableSectionMod
                 self.updatedSubject.onNext()
             }
             else {
-                dispatch_async(dispatch_get_main_queue()) {
-                    let oldSections = dataSource.sectionModels
-                    do {
-                        let differences = try differencesForSectionedView(oldSections, finalSections: newSections)
-
-                        for difference in differences {
-                            dataSource.setSections(difference.finalSections)
-
-                            collectionView.performBatchUpdates(difference, animationConfiguration: self.animationConfiguration)
-                        }
-                        self.updatedSubject.onNext()
-                    }
-                    catch let e {
-                        #if DEBUG
-                        print("Error while binding data animated: \(e)\nFallback to normal `reloadData` behavior.")
-                        rxDebugFatalError(e)
-                        #endif
-                        self.setSections(newSections)
-                        collectionView.reloadData()
-                        self.updatedSubject.onNext()
-                    }
-                }
+                let element = (collectionView, observedEvent)
+                dataSource.partialUpdateEvent.on(.Next(element))
             }
         }.on(observedEvent)
     }
